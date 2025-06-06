@@ -1,90 +1,7 @@
 from typing import List, Optional, Dict, Union
-from pydantic import BaseModel
-
-class PhoneFax(BaseModel):
-    number: str
-    format: Optional[int] = 1
-
-class Contact(BaseModel):
-    id: Optional[int] = None
-    contact_type: Optional[dict] = 1
-    name: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[PhoneFax] = None
-    fax: Optional[PhoneFax] = None
-
-
-class Salesperson(BaseModel):
-    code: Optional[str] = None
-    name: Optional[str] = None
-
-
-class Territory(BaseModel):
-    code: Optional[str] = None
-    description: Optional[str] = None
-
-
-class Address(BaseModel):
-    id: Optional[int] = None
-    type: Optional[str] = None
-    linkTable: Optional[str] = None
-    linkType: Optional[str] = None
-    linkNo: Optional[str] = None
-    shipId: Optional[str] = None
-    name: Optional[str] = None
-    line1: Optional[str] = None
-    line2: Optional[str] = None
-    line3: Optional[str] = None
-    line4: Optional[str] = None
-    city: Optional[str] = None
-    postalCode: Optional[str] = None
-    provState: Optional[str] = None
-    country: Optional[str] = None
-    phone: Optional[PhoneFax] = None
-    fax: Optional[PhoneFax] = None
-    email: Optional[str] = None
-    website: Optional[str] = None
-    shipCode: Optional[str] = None
-    shipDescription: Optional[str] = None
-    salesperson: Optional[Salesperson] = None
-    territory: Optional[Territory] = None
-    sellLevel: Optional[int] = None
-    glAccount: Optional[str] = None
-    defaultWarehouse: Optional[str] = None
-    udf: Optional[dict] = None
-    created: Optional[str] = None
-    modified: Optional[str] = None
-    contacts: Optional[List[Contact]] = None
-    salesTaxes: Optional[List[Dict[str, Union[int, str]]]] = None
-
-
-class Currency(BaseModel):
-    id: Optional[int] = None
-    code: Optional[str] = None
-    description: Optional[str] = None
-    country: Optional[str] = None
-    units: Optional[str] = None
-    fraction: Optional[str] = None
-    symbol: Optional[str] = None
-    decimalPlaces: Optional[int] = None
-    symbolPosition: Optional[str] = None
-    rate: Optional[str] = None
-    rateMethod: Optional[str] = None
-    glAccountNo: Optional[str] = None
-    thousandsSeparator: Optional[str] = None
-    lastYearRate: Optional[List[str]] = None
-    thisYearRate: Optional[List[str]] = None
-    nextYearRate: Optional[List[str]] = None
-
-
-class Customer(BaseModel):
-    id: Optional[int] = None
-    code: Optional[str] = None
-    customerNo: Optional[str] = None
-    name: Optional[str] = None
-    foregroundColor: Optional[int] = None
-    backgroundColor: Optional[int] = None
-
+from pydantic import BaseModel, model_validator
+from Models.shared_models import *
+from Models.customers_models import Customer
 
 class Inventory(BaseModel):
     id: Optional[int] = None
@@ -93,7 +10,7 @@ class Inventory(BaseModel):
     description: Optional[str] = None
 
 
-class Item(BaseModel):
+class SalesOrderItem(BaseModel):
     id: Optional[int] = None
     orderNo: Optional[str] = None
     sequence: Optional[int] = None
@@ -130,15 +47,6 @@ class Item(BaseModel):
     kit: Optional[bool] = None
     suppress: Optional[bool] = None
     udf: Optional[dict] = None
-
-
-class Tax(BaseModel):
-    code: Optional[int] = None
-    name: Optional[str] = None
-    shortName: Optional[str] = None
-    rate: Optional[Union[str, int]] = None
-    exemptNo: Optional[str] = None
-    total: Optional[Union[str, int]] = None
 
 
 class SalesOrder(BaseModel):
@@ -186,7 +94,7 @@ class SalesOrder(BaseModel):
     totalCostCurrent: Optional[str] = None
     totalCostAverage: Optional[str] = None
     grossProfit: Optional[str] = None
-    items: Optional[List[Item]] = None
+    items: Optional[List[SalesOrderItem]] = None
     payments: Optional[List[dict]] = None
     udf: Optional[dict] = None
     createdBy: Optional[str] = None
@@ -196,7 +104,20 @@ class SalesOrder(BaseModel):
     deletedBy: Optional[str] = None
     deleted: Optional[str] = None
     links: Optional[Dict[str, str]] = None
+    
+    @model_validator(mode="before")
+    @classmethod
+    def clean_problematic_fields(cls, data: dict) -> dict:
+        if data.get("currency") == "":
+            data["currency"] = None
 
+        contact = data.get("contact")
+        if contact:
+            for field in ("phone", "fax"):
+                phone_data = contact.get(field)
+                if isinstance(phone_data, dict) and phone_data.get("number") is None:
+                    phone_data["number"] = ""
+        return data
 
 class Invoice(BaseModel):
     id: Optional[int] = None
@@ -226,7 +147,7 @@ class Invoice(BaseModel):
     taxes: Optional[List['Tax']] = None
     subtotal: Optional[str] = None
     total: Optional[str] = None
-    items: Optional[List['Item']] = None
+    items: Optional[List['SalesOrderItem']] = None
     payments: Optional[List[dict]] = None
     udf: Optional[dict] = None
     createdBy: Optional[str] = None
