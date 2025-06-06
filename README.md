@@ -1,6 +1,6 @@
 # Spire API Python Client
 
-A robust and extensible Python client for interacting with the [Spire Business Software API](https://www.spiresw.com/). This client provides an object-oriented interface to query, filter, sort, and manage various Spire modules such as Sales Orders, Invoices, Inventory Items, and more.
+A robust and extensible Python client for interacting with the [Spire Business Software API](https://developer.spiresystems.com/reference). This client provides an object-oriented interface to query, filter, sort, and manage various Spire modules such as Sales Orders, Invoices, Inventory Items, and more.
 
 ---
 
