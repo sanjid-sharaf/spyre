@@ -1,8 +1,7 @@
 venv
 .env
-api/v0/testing.py
-api/v0/__pycache__/
-api/v0/Models/__pycache__/
+spyre/__pycache__
 fba-orders-import.py
 Testing/
 fba-orders-import.log
+spyre/Models/__pycache__
