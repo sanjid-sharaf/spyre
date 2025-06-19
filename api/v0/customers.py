@@ -3,6 +3,7 @@ from Models.customers_models import Customer
 from client import APIResource
 from Exceptions import *
 from urllib.parse import urlparse
+from typing import Optional, Dict, Any, List
 
 class CustomerClient():
 
@@ -81,6 +82,45 @@ class CustomerClient():
             bool: True if the customer was successfully deleted, False otherwise.
         """
         return self.client._delete(f"/{self.endpoint}/{str(id)}")
+    
+
+    def query_invoices(
+        self,
+        *,
+        query: Optional[str] = None,
+        sort: Optional[Dict[str, str]] = None,
+        filter: Optional[Dict[str, Any]] = None,
+        all: bool = False,
+        limit: int = 1000,
+        start: int = 0,
+        **extra_params
+    ) -> List["customer"]:
+        """
+        Query customer with optional full-text search, filtering, multi-field sorting, and pagination.
+
+        Args:
+            q (str, optional): Full-text search string.
+            sort (dict, optional): Dictionary of sorting rules (e.g., {"orderDate": "desc", "orderNo": "asc"}).
+            filter (dict, optional): Dictionary of filters to apply (will be JSON-encoded and URL-safe).
+            all (bool, optional): If True, retrieves all pages of results.
+            limit (int, optional): Number of results per page (max 1000).
+            start (int, optional): Starting offset for pagination.
+            **extra_params: Any additional parameters to include in the query.
+
+        Returns:
+            List[customer]: List of wrapped customer resources.
+        """
+        return self.client._query(
+            endpoint=self.endpoint,
+            resource_cls=customer,
+            query=query,
+            sort=sort,
+            filter=filter,
+            all=all,
+            limit=limit,
+            start=start,
+            **extra_params
+        )
     
 
 class customer(APIResource[Customer]):

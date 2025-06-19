@@ -19,6 +19,26 @@ class SpireClient():
         self.base_url = f"{BASE_URL}/{company}"
 
     def _get(self, endpoint, params=None):
+
+        """
+        Send a GET request to the Spire API.
+
+        This method constructs the full URL using the provided endpoint,
+        sends an HTTP GET request with optional query parameters, and returns
+        the parsed JSON response. Raises an HTTPError if the response contains
+        an unsuccessful status code.
+
+        Args:
+            endpoint (str): The relative API endpoint (e.g., 'inventory/items/123').
+            params (dict, optional): A dictionary of query parameters to include
+                in the request (e.g., {'status': 'active'}). Defaults to None.
+
+        Returns:
+            dict: The JSON-decoded response from the API.
+
+        Raises:
+            requests.exceptions.HTTPError: If the response contains an HTTP error status.
+        """
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         response = self.session.get(url , params=params)
         response.raise_for_status()
@@ -40,6 +60,18 @@ class SpireClient():
         response = self.session.delete(url)
         return response.status_code == 200 or response.status_code == 204 or response.status_code == 202
     
+    def _handle_response(self, response):
+        
+        try:
+            content = response.json()
+        except ValueError:
+            content = response.text
+        return{
+            "status_code": response.status_code,
+            "url": response.url,
+            "content": content,
+            "headers" : response.headers
+        }
 
     def _query(
         self,
@@ -120,9 +152,13 @@ class APIResource(Generic[T]):
     Model: type
     endpoint: str   
 
-    def __init__(self, model: T, client: SpireClient):
+    def __init__(self, model: T, client: SpireClient, **kwargs):
         object.__setattr__(self, "_model", model)
         object.__setattr__(self, "_client", client)
+
+        # Let child classes handle extra kwargs
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def __getattr__(self, item):
         """  delegate unknown attributes to the Pydantic model. 
@@ -155,10 +191,9 @@ class APIResource(Generic[T]):
         return self._model
     
     @classmethod
-    def from_json(cls, json_data: dict, client: SpireClient) -> "APIResource":
-        """Create an instance of this API resource from JSON."""
+    def from_json(cls, json_data: dict, client: SpireClient, **kwargs) -> "APIResource":
         model_instance = cls.Model(**json_data)
-        return cls(model_instance, client)
+        return cls(model_instance, client, **kwargs)
     
     def refresh(self):
         updated = self._client._get(f"{self.endpoint}/{self.id}")

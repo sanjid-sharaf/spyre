@@ -9,7 +9,6 @@ class Inventory(BaseModel):
     partNo: Optional[str] = None
     description: Optional[str] = None
 
-
 class SalesOrderItem(BaseModel):
     id: Optional[int] = None
     orderNo: Optional[str] = None
@@ -155,3 +154,17 @@ class Invoice(BaseModel):
     created: Optional[str] = None
     modified: Optional[str] = None
     links: Optional[Dict[str, str]] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def clean_problematic_fields(cls, data: dict) -> dict:
+        if data.get("currency") == "":
+            data["currency"] = None
+
+        contact = data.get("contact")
+        if contact:
+            for field in ("phone", "fax"):
+                phone_data = contact.get(field)
+                if isinstance(phone_data, dict) and phone_data.get("number") is None:
+                    phone_data["number"] = ""
+        return data

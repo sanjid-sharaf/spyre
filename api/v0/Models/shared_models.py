@@ -87,6 +87,8 @@ class Address(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def limit_contacts_to_three(cls, data):
+        """Limits contacts to 3 per address. The Spire API only allows Creatig/Updating Addresses with contacts."""
+
         if isinstance(data, dict):
             contacts = data.get('contacts')
             if isinstance(contacts, list) and len(contacts) > 3:

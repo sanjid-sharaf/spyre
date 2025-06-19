@@ -12,7 +12,7 @@ class OrdersClient():
         self.client = client
         self.endpoint = "sales/orders"
     
-    def get_sales_order(self, id: int) -> "salesOrder":
+    def get_sales_order(self,  id: int, ) -> "salesOrder":
         """
         Retrieve a sales order by its ID.
 
@@ -167,7 +167,44 @@ class InvoiceClient():
         response = self.client._put(f"/{self.endpoint}/{id}", json=invoice.model_dump(exclude_none=True, exclude_unset=True))
         return invoice.from_json(response, self.client)
     
-    
+    def query_invoices(
+        self,
+        *,
+        query: Optional[str] = None,
+        sort: Optional[Dict[str, str]] = None,
+        filter: Optional[Dict[str, Any]] = None,
+        all: bool = False,
+        limit: int = 1000,
+        start: int = 0,
+        **extra_params
+    ) -> List["salesOrder"]:
+        """
+        Query invoices with optional full-text search, filtering, multi-field sorting, and pagination.
+
+        Args:
+            q (str, optional): Full-text search string.
+            sort (dict, optional): Dictionary of sorting rules (e.g., {"orderDate": "desc", "orderNo": "asc"}).
+            filter (dict, optional): Dictionary of filters to apply (will be JSON-encoded and URL-safe).
+            all (bool, optional): If True, retrieves all pages of results.
+            limit (int, optional): Number of results per page (max 1000).
+            start (int, optional): Starting offset for pagination.
+            **extra_params: Any additional parameters to include in the query.
+
+        Returns:
+            List[invoice]: List of wrapped invoice resources.
+        """
+        return self.client._query(
+            endpoint=self.endpoint,
+            resource_cls=invoice,
+            query=query,
+            sort=sort,
+            filter=filter,
+            all=all,
+            limit=limit,
+            start=start,
+            **extra_params
+        )
+
 
 class salesOrder(APIResource[SalesOrder]):
     endpoint = "sales/orders/"
@@ -183,11 +220,18 @@ class salesOrder(APIResource[SalesOrder]):
         Returns:
             invoice: The created invoice object if successful.
             dict: The full response if invoicing failed.
+ 
         """
         response = self._client._post(f"/{self.endpoint}/{str(self.id)}/invoice")
-        if response.get('status_code') == 200: 
-            return invoice.from_json(response.get('content').get('invoice'), self._client)
-        return response
+        if response.get('status_code') == 201:
+            location = response.get('headers').get('location')
+            parsed_url = urlparse(location)
+            path_segments = parsed_url.path.rstrip("/").split("/")
+            id = path_segments[-1]
+            return InvoiceClient(client=self._client).get_invoice(id)
+        else:
+            error_message = response.get('content')
+            raise CreateRequestError(self.endpoint, status_code=response.get('status_code'), error_message=error_message)
     
     def process(self) -> 'salesOrder':
         """
@@ -200,7 +244,7 @@ class salesOrder(APIResource[SalesOrder]):
         """
         response = self._client._put(
             f"/{self.endpoint}/{str(self.id)}",
-            json={"status": "P"}
+            json={"status": "P"}    
         )
         return salesOrder.from_json(response, self._client)
     
@@ -231,11 +275,10 @@ class salesOrder(APIResource[SalesOrder]):
         """
         data = order.model_dump(exclude_unset=True, exclude_none=True) if order else self.model_dump(exclude_unset=True, exclude_none=True)
         response = self._client._put(f"/{self.endpoint}/{str(self.id)}", json=data)
-        return salesOrder.from_json(response, self._client)
-
+        return salesOrder.from_json(response, self._client)    
 
 class invoice(APIResource[Invoice]):
-    endpoint = "sales/orders/"
+    endpoint = "sales/invoices/"
     Model = Invoice
 
     def reverse(self):
@@ -252,7 +295,7 @@ class invoice(APIResource[Invoice]):
         order_converted = utils.create_sales_order_from_invoice(self._model)
         return OrdersClient(self._client).create_sales_order(order_converted)
 
-    def update(self , invoice: "Invoice" = None) -> 'invoice':
+    def update(self , invoice_: "Invoice" = None) -> 'invoice':
         """
         Update this invoice.
 
@@ -265,5 +308,6 @@ class invoice(APIResource[Invoice]):
         Returns:
             invoice: The updated invoice instance created from the response data.
         """
-        response = self.client._put(f"/{self.endpoint}/{id}", json=invoice.model_dump(exclude_none=True, exclude_unset=True))
-        return invoice.from_json(response, self.client)
+        data = invoice_.model_dump(exclude_unset=True, exclude_none=True) if invoice_ else self.model_dump(exclude_unset=True, exclude_none=True)
+        response = self._client._put(f"/{self.endpoint}/{str(self.id)}", json=data)
+        return invoice.from_json(response, self._client)   
