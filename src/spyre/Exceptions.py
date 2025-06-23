@@ -1,23 +1,3 @@
-
-"""
->Cannot Convert Invoice to Quote
->Inactive Item
->invalide Syntax for date time
->A database error has occurred:\n\nA value passed to the database was too long for the column - Country Name 
->Order Number Exists
->Invalid Customer
->Missing Parent/Child errror -> id of addresses
-
-Contacts 3
-Request Failure
-Not Found
-invalid Field for filter
-
-
-{'status_code': 422, 'url': 'https://red-wave-8362.spirelan.com:10880/api/v2/companies/intertest/sales/orders/31308/invoice', 
-'content': {'type': 'error', 'message': 'Cannot post a deleted order', 'traceback': '', 'error_type': 'BusinessViolationError'}}
-"""
-
 class CreateRequestError(Exception):
     """
     Exception raised when a create (POST) request to the API fails.
@@ -43,3 +23,24 @@ class CreateRequestError(Exception):
             "error_message": self.error_message,
             "response_body": self.response_body,
         }
+    
+
+"""
+Other Common Exceptions that occur during us of the Spire API includes but not limited to the following
+I have yet to implement these in code and catch them while makin requests. Something to do in the Future 
+
+The following are errors that occur for the sales module 
+>Cannot Invoice a Quote
+>Inactive Item
+>Invalid Syntax for date time
+>A database error has occurred:\n\nA value passed to the database was too long for the column - Country Name 
+>Order Number Exists
+>Invalid Customer
+>Missing Parent/Child errror -> id of addresses
+
+Only 3 Contact record per an address record in the api body
+Request Failure
+Not Found
+invalid Field for filter
+
+"""

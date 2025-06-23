@@ -1,5 +1,5 @@
 import requests
-from config import BASE_URL
+from .config import BASE_URL
 from typing import TypeVar, Optional, Type, Generic, List, Union, Tuple, Dict, Any
 from pydantic import BaseModel
 import json

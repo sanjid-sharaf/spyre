@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Union
 from pydantic import BaseModel, model_validator
-from Models.shared_models import *
-from Models.customers_models import Customer
+from .shared_models import Address, Currency, Contact, Tax
+from .customers_models import Customer
 
 class Inventory(BaseModel):
     id: Optional[int] = None

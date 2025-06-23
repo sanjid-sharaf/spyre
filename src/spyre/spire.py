@@ -1,7 +1,7 @@
-from client import SpireClient
-from sales import *
-from customers import *
-from inventory import InventoryClient
+from .client import SpireClient
+from .sales import OrdersClient, InvoiceClient
+from .customers import CustomerClient
+from .inventory import InventoryClient
 
 class Spire:
     def __init__(self, company : str, username : str, password : str):

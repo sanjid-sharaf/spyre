@@ -1,24 +1,9 @@
-from Models.inventory_models import *
-import utils
-from client import *
+from .Models.inventory_models import InventoryItem, UnitOfMeasure, UPC
+from .client import SpireClient, APIResource
 from urllib.parse import urlparse 
-from Exceptions import *
-from typing import Any
+from .Exceptions import CreateRequestError
+from typing import Any, Optional, Dict, List
 from typing import TYPE_CHECKING
-
-""""
-TODO    Get Upc
-        Create UPC
-        Query UPC
-        Delete UPC
-        Update UPC
-
-        Sell Prices
-
-        Counts
-        Adjustements
-
-"""
 
 class InventoryClient():
     
@@ -163,7 +148,19 @@ class ItemsClient():
         )
     
     def get_item_uoms(self, id : int) -> List["uom"]:
-        
+        """
+        Retrieve all Unit of Measure (UOM) entries for a specific inventory item.
+
+        This method sends a GET request to the Spire API to retrieve the unit of measure
+        records associated with the specified inventory item ID. Each returned record is 
+        wrapped into a `uom` object, which includes the model and the client reference.
+
+        Args:
+            id (int): The unique identifier of the inventory item.
+
+        Returns:
+            List[uom]: A list of `uom` objects representing the UOM records for the item.
+        """
         uoms = []
         response = self.client._get(f"{self.endpoint}/{str(id)}/uoms")
         items = response.get('records')
@@ -173,13 +170,43 @@ class ItemsClient():
         return uoms
 
     def get_uom(self, item_id :int , uom_id : int) -> "uom":
+        """
+        Retrieve a specific Unit of Measure (UOM) for a given inventory item.
 
+        This method sends a GET request to the Spire API to fetch a single UOM record
+        associated with a specific inventory item and UOM ID. The response is wrapped
+        into a `uom` object that maintains a reference to the API client.
+
+        Args:
+            item_id (int): The unique ID of the inventory item.
+            uom_id (int): The unique ID of the UOM to retrieve.
+
+        Returns:
+            uom: A `uom` object representing the retrieved unit of measure.
+
+        """
         response = self.client._get(f"/{self.endpoint}/{str(item_id)}/uoms/{str(uom_id)}")
         return uom.from_json(response, self.client)
     
 
     def create_item_uom(self, id: int, uom : UnitOfMeasure) -> List["uom"]:
-        
+        """
+        Create a new Unit of Measure (UOM) for a specific inventory item.
+
+        Sends a POST request to the Spire API to create a new UOM for the inventory item
+        with the specified ID. If successful, the method retrieves and returns the newly
+        created UOM object. If the creation fails, an exception is raised.
+
+        Args:
+            id (int): The ID of the inventory item for which to create the UOM.
+            uom (UnitOfMeasure): A Pydantic model instance representing the UOM to create.
+
+        Returns:
+            List[uom]: A list containing the created `uom` object.
+
+        Raises:
+            CreateRequestError: If the API response status is not 201 (Created).
+        """
         response =  self.client._post(f"/{self.endpoint}/{str(id)}/uoms", json=uom.model_dump(exclude_unset=True, exclude_none=True))
         if response.get('status_code') == 201:
             location = response.get('headers').get('location')
@@ -192,17 +219,53 @@ class ItemsClient():
             raise CreateRequestError(self.endpoint, status_code=response.get('status_code'), error_message=error_message)
 
     def delete_uom(self, item_id : int, uom_id :int) -> bool:
+        """
+        Delete a Unit of Measure (UOM) from a specific inventory item.
 
+        Sends a DELETE request to the Spire API to remove a UOM associated with the
+        given item and UOM ID.
+
+        Args:
+            item_id (int): The ID of the inventory item.
+            uom_id (int): The ID of the Unit of Measure to delete.
+
+        Returns:
+            bool: True if the deletion was successful, otherwise raises an error.
+        """
         return self.client._delete(f"/{self.endpoint}/{str(item_id)}/uoms/{str(uom_id)}")
     
     def update_item_uom(self, item_id: int, uom_id : int, uom :'uom') -> 'uom':
+        """
+        Update an existing Unit of Measure (UOM) for a given inventory item.
 
+        Sends a PUT request to the Spire API to update the UOM record with the specified
+        item and UOM ID using the provided `uom` data.
+
+        Args:
+            item_id (int): The ID of the inventory item.
+            uom_id (int): The ID of the UOM to update.
+            uom (uom): A `uom` instance with updated field values.
+
+        Returns:
+            uom: The updated `uom` instance returned from the API.
+        """
         response = self.client._put(f"/{self.endpoint}/{str(item_id)}/{str(uom_id)}", json=uom.model_dump(exclude_none=True, exclude_unset=True))
         return uom.from_json(response, self.client)
     
 
     def get_item_upcs(self, id : int) -> List["upc"]:
-        
+        """
+        Retrieve all UPC records associated with a specific inventory item.
+
+        Sends a GET request to the Spire API to fetch UPCs for the specified item ID,
+        then constructs and returns a list of `upc` objects.
+
+        Args:
+            id (int): The ID of the inventory item.
+
+        Returns:
+            List[upc]: A list of `upc` objects representing the item's UPC codes.
+        """
         upcs = []
         response = self.client._get(f"{self.endpoint}/{str(id)}/upcs")
         items = response.get('records')
@@ -211,11 +274,6 @@ class ItemsClient():
 
         return upcs
     
-
-        # def get_uom(self, item_id :int , uom_id : int) -> "uom":
-
-        # response = self.client._get(f"/{self.endpoint}/{str(item_id)}/uoms/{str(uom_id)}")
-        # return uom.from_json(response, self.client)
 
 class item(APIResource[InventoryItem]):
     
@@ -257,7 +315,15 @@ class item(APIResource[InventoryItem]):
         return item.from_json(response, self._client)    
     
     def get_uoms(self) -> List["uom"]:
-        
+        """
+        Retrieve all Unit of Measure (UOM) records for the current inventory item.
+
+        This method sends a GET request to the Spire API and returns all UOMs
+        associated with this item's ID.
+
+        Returns:
+            List[uom]: A list of `uom` instances representing the available units of measure.
+        """       
         uoms = []
         response = self._client._get(f"{self.endpoint}/{self.id}/uoms")
         items = response.get('records')
@@ -268,7 +334,22 @@ class item(APIResource[InventoryItem]):
     
 
     def add_uom(self, uom : UnitOfMeasure) -> List["uom"]:
-        
+        """
+        Add a new Unit of Measure (UOM) to the current inventory item.
+
+        Sends a POST request to the Spire API to create a new UOM record using the provided
+        `UnitOfMeasure` model. If the creation is successful (HTTP 201), it retrieves
+        and returns the created UOM.
+
+        Args:
+            uom (UnitOfMeasure): The UnitOfMeasure Pydantic model to be created.
+
+        Returns:
+            List[uom]: A list containing the newly created `uom` instance.
+
+        Raises:
+            CreateRequestError: If the API returns a non-201 status code during creation.
+        """
         response =  self.client._post(f"/{self.endpoint}/{str(self.id)}/uoms", json=uom.model_dump(exclude_unset=True, exclude_none=True))
         if response.get('status_code') == 201:
             location = response.get('headers').get('location')
@@ -327,9 +408,6 @@ class UpcClient():
 
     def __init__(self, client : SpireClient):
         self.endpoint = 'inventory/upcs'
-
-
-
 
 class upc(APIResource[UPC]):
     _endpoint = ''         

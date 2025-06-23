@@ -1,4 +1,4 @@
-from Models.sales_models import *
+from .Models.sales_models import SalesOrder, Invoice
 from typing import TypeVar, Optional, Type, List, Set
 from copy import deepcopy
 from pydantic import BaseModel

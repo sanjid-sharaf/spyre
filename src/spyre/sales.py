@@ -1,10 +1,10 @@
-from client import APIResource
-from Models.sales_models import *
-import utils
-from client import SpireClient
+from .client import APIResource
+from .Models.sales_models import SalesOrder, SalesOrderItem, Invoice
+from .utils import *
+from .client import SpireClient
 from urllib.parse import urlparse 
-from Exceptions import *
-from typing import Any
+from .Exceptions import CreateRequestError
+from typing import Any, Optional, List, Dict
 
 class OrdersClient():
 
@@ -292,7 +292,7 @@ class invoice(APIResource[Invoice]):
         Returns:
             salesOrder: The created sales order instance returned by the API.
         """
-        order_converted = utils.create_sales_order_from_invoice(self._model)
+        order_converted = create_sales_order_from_invoice(self._model)
         return OrdersClient(self._client).create_sales_order(order_converted)
 
     def update(self , invoice_: "Invoice" = None) -> 'invoice':

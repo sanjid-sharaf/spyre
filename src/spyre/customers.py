@@ -1,7 +1,6 @@
-from client import SpireClient
-from Models.customers_models import Customer
-from client import APIResource
-from Exceptions import *
+from .client import SpireClient, APIResource
+from .Models.customers_models import Customer
+from .Exceptions import CreateRequestError
 from urllib.parse import urlparse
 from typing import Optional, Dict, Any, List
 

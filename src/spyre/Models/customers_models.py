@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict, Union, Any
 from pydantic import BaseModel, model_validator
-from Models.shared_models import *
+from .shared_models import Address
 
 class Customer(BaseModel):
     id: Optional[int] = None

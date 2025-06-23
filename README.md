@@ -20,3 +20,20 @@ A robust and extensible Python client for interacting with the [Spire Business S
 
 ```bash
 pip install -r requirements.txt
+```
+
+---
+
+## ⚙️ Configuration
+
+- Before using the client, set up your environment configuration:
+
+### 1. Create a `.env` file
+
+- In your project root, create a `.env` file to securely store your Spire configuration.
+- Add the following variable:
+
+```env
+BASE_URL = https://{your-spire-domain}/api/v2/companies/
+```
+- Replace {your-spire-domain} with your actual Spire server's hostname or IP address.
