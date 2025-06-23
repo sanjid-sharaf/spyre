@@ -28,7 +28,7 @@ pip install -r requirements.txt
 
 - Before using the client, set up your environment configuration:
 
-### 1. Create a `.env` file
+### Add your Base URL to your spire server to a `.env` file
 
 - In your project root, create a `.env` file to securely store your Spire configuration.
 - Add the following variable:
