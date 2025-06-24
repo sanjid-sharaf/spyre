@@ -83,7 +83,7 @@ class CustomerClient():
         return self.client._delete(f"/{self.endpoint}/{str(id)}")
     
 
-    def query_invoices(
+    def query_customers (
         self,
         *,
         query: Optional[str] = None,
