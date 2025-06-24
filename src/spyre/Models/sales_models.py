@@ -15,7 +15,7 @@ class SalesOrderItem(BaseModel):
     sequence: Optional[int] = None
     parentSequence: Optional[int] = None
     inventory: Optional[Inventory] = None
-    serials: Optional[str] = None
+    serials: Optional[List[str]] = None
     whse: Optional[str] = None
     partNo: Optional[str] = None
     description: Optional[str] = None
