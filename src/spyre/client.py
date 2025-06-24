@@ -116,8 +116,13 @@ class SpireClient():
 
             if query:
                 params.append(("q", query))
-
+                
             if filter:
+                model_fields = resource_cls.Model.model_fields.keys()
+                invalid_fields = [key for key in filter.keys() if key not in model_fields]
+                if invalid_fields:
+                    raise ValueError(f"Invalid filter field(s): {invalid_fields}. for {resource_cls.Model.__name__} ")
+
                 encoded_filter = json.dumps(filter)
                 params.append(("filter", encoded_filter))
 
