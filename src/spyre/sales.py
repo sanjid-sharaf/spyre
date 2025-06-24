@@ -1,10 +1,12 @@
 from .client import APIResource
 from .Models.sales_models import SalesOrder, SalesOrderItem, Invoice
+from .Models.shared_models import Note
 from .utils import *
 from .client import SpireClient
 from urllib.parse import urlparse 
 from .Exceptions import CreateRequestError
 from typing import Any, Optional, List, Dict
+from .crm import note, CRMClient
 
 class OrdersClient():
 
@@ -37,7 +39,7 @@ class OrdersClient():
         Sends a POST request to the sales order endpoint .
 
         Args:
-            sales_order (dict): A SalesOrder instace containing the sales order details.
+            sales_order (dict): A SalesOrder instance containing the sales order details.
 
         Returns:
             salesOrder: The created SalesOrder instance.
@@ -129,6 +131,31 @@ class OrdersClient():
             **extra_params
         )
     
+    def create_sales_order_note(self, id: int , note_body : str, note_subject : str = "Note") -> note:
+        """
+        Create a new note on this sales order.
+
+        Args:
+            id (int): The id of the salesOrder to create a note on.
+            note (str): The body of the note 
+        Returns:
+            note: The created note
+
+        Raises:
+            CreateRequestError: If the creation fails or response is invalid.
+        """
+
+        note_model = Note(body=note_body, subject=note_subject)
+        response =  self.client._post(f"/{self.endpoint}/{id}/notes/", json=note_model.model_dump(exclude_unset=True, exclude_none=True))
+        if response.get('status_code') == 201:
+            location = response.get('headers').get('location')
+            parsed_url = urlparse(location)
+            path_segments = parsed_url.path.rstrip("/").split("/")
+            id = path_segments[-1]
+            return CRMClient(client=self.client).get_note(id)
+        else:
+            error_message = response.get('content')
+            raise CreateRequestError(self.endpoint, status_code=response.get('status_code'), error_message=error_message)
     
 class InvoiceClient():
     
@@ -277,6 +304,30 @@ class salesOrder(APIResource[SalesOrder]):
         response = self._client._put(f"/{self.endpoint}/{str(self.id)}", json=data)
         return salesOrder.from_json(response, self._client)    
 
+    def add_note(self, note_body : "str" , note_subject : "str" = "Note") -> note:
+        """
+        Add a note to this sales order
+
+        Args:
+            note_body (str): the body of the note.
+            note_subject (str, "Note"): the subject of the note. the defualt value is just "Note"
+
+        Returns:
+            note: The note created.
+        """
+
+        note_model = Note(body=note_body, subject=note_subject)
+        response =  self._client._post(f"/{self.endpoint}/{str(self.id)}/notes/", json=note_model.model_dump(exclude_unset=True, exclude_none=True))
+        if response.get('status_code') == 201:
+            location = response.get('headers').get('location')
+            parsed_url = urlparse(location)
+            path_segments = parsed_url.path.rstrip("/").split("/")
+            id = path_segments[-1]
+            return CRMClient(client=self._client).get_note(id)
+        else:
+            error_message = response.get('content')
+            raise CreateRequestError(f"/{self.endpoint}/{str(self.id)}/notes/", status_code=response.get('status_code'), error_message=error_message)
+
 class invoice(APIResource[Invoice]):
     endpoint = "sales/invoices/"
     Model = Invoice
@@ -311,3 +362,5 @@ class invoice(APIResource[Invoice]):
         data = invoice_.model_dump(exclude_unset=True, exclude_none=True) if invoice_ else self.model_dump(exclude_unset=True, exclude_none=True)
         response = self._client._put(f"/{self.endpoint}/{str(self.id)}", json=data)
         return invoice.from_json(response, self._client)   
+    
+

@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Dict, Union, Any
 from pydantic import BaseModel, model_validator
 
 class PhoneFax(BaseModel):
@@ -94,3 +94,32 @@ class Address(BaseModel):
             if isinstance(contacts, list) and len(contacts) > 3:
                 data['contacts'] = contacts[:3]
         return data
+
+class AssignedTo(BaseModel):
+    id: Optional[int] = None
+    uuid: Optional[str] = None
+    username: Optional[str] = None
+    
+class Note(BaseModel):
+    id: Optional[int] = None
+    linkTable: Optional[str] = None
+    linkNo: Optional[str] = None
+    subject: Optional[str] = None
+    body: Optional[str] = None
+    attachment: Optional[Any] = None
+    attachmentName: Optional[str] = None
+    dueDate: Optional[str] = None
+    completedDate: Optional[str] = None
+    attention: Optional[str] = None
+    type: Optional[str] = None
+    displayType: Optional[str] = None
+    assignedTo: Optional[AssignedTo] = None
+    groupType: Optional[str] = None
+    qty: Optional[int] = None
+    alert: Optional[Union[str, bool]] = None
+    print: Optional[Union[str, bool]] = None
+    created: Optional[str] = None
+    createdBy: Optional[str] = None
+    modified: Optional[str] = None
+    modifiedBy: Optional[str] = None
+    links: Optional[Dict[str, str]] = None
