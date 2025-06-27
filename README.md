@@ -28,8 +28,8 @@ pip install -r requirements.txt
 
 - How to set up your spire client
 
-## Find your Spire url
-### Base URL
+### Find your Spire URL
+
 The base URL for the Spire API is the same url provided by Spire that you use to access Spire server and uses port 10880 as default:
 Replace {spire-url} with the url provided by Spire.
 
