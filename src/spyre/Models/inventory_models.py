@@ -37,7 +37,11 @@ class UnitOfMeasure(BaseModel):
 
 class Pricing(BaseModel):
     id: Optional[int] = None
-    sellPrices: Optional[List[str]] = None
+    sellPrice: Optional[List[str]] = None
+    currMargin: Optional[str] = None
+    currMarginPct: Optional[str] = None
+    avgMargin: Optional[str] = None
+    avgMarginPct: Optional[str] = None
 
 
 class ItemUDF(BaseModel):
@@ -143,7 +147,7 @@ class InventoryItem(BaseModel):
     manufactureCountry: Optional[str] = None
     harmonizedCode: Optional[str] = None
     extendedDescription: Optional[str] = None
-    pricing: Optional[Dict[str, Pricing]] = None
+    pricing: Optional[Union[ Pricing | Dict[str, Pricing]]] = None
     salesTaxFlags: Optional[Dict[str, Union[str, int, float, bool]]] = None
     images: Optional[List[str]] = None
     defaultExpiryDate: Optional[str] = None
@@ -151,7 +155,7 @@ class InventoryItem(BaseModel):
     upload: Optional[bool] = None
     showOptions: Optional[bool] = None
     lastModified: Optional[str] = None
-    levy: Optional[str] = None
+    levy: Optional[Union[str | dict]] = None
     udf: Optional[ItemUDF] = None
     createdBy: Optional[str] = None
     modifiedBy: Optional[str] = None
