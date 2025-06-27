@@ -1,5 +1,4 @@
 import requests
-from .config import BASE_URL
 from typing import TypeVar, Optional, Type, Generic, List, Union, Tuple, Dict, Any
 from pydantic import BaseModel
 import json
@@ -9,14 +8,14 @@ T = TypeVar('T', bound=BaseModel)
 
 class SpireClient():
     
-    def __init__(self, company, username, password,):
+    def __init__(self, host, company, username, password,):
         self.session = requests.Session()
         self.session.auth = (username, password)
         self.session.headers.update({
             "accept": "application/json",
             "content-type": "application/json"
         })
-        self.base_url = f"{BASE_URL}/{company}"
+        self.base_url = f"https://{host}/api/v2/companies/{company}"
 
     def _get(self, endpoint, params=None):
 

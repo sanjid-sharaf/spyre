@@ -26,14 +26,23 @@ pip install -r requirements.txt
 
 ## ⚙️ Configuration
 
-- Before using the client, set up your environment configuration:
+- How to set up your spire client
 
-### Add your Base URL to your spire server to a `.env` file
+### Find Your Spire Domain
+https://{your-spire-domain}/api/v2/companies/
 
-- In your project root, create a `.env` file to securely store your Spire configuration.
-- Add the following variable:
+### Set up your client with your credentials
 
-```env
-BASE_URL = https://{your-spire-domain}/api/v2/companies/
+```python
+from spyre import Spire
+
+client = Spire(host = 'your-spire-domain', company = 'comapany-name' , username = 'username' , password = 'password' )
+
 ```
-- Replace {your-spire-domain} with your actual Spire server's hostname or IP address.
+
+## Example : Updating the status of an inventory item 
+```python
+item = client.inventory.items.get_item(1101)    # Gets item with id 1101
+item.status = 1                                 # Use either item. or item.model. . item.model. will bring up all attributes
+item.update()
+```
