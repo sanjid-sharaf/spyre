@@ -44,8 +44,8 @@ If you are using Spire cloud you do not need to specify a port. The base URL for
 
 ```python
 from spyre import Spire
-
-client = Spire(host = 'your-spire-domain', company = 'comapany-name' , username = 'username' , password = 'password' )
+# host is your spire url and the port if applicable
+client = Spire(host = 'your-spire-host', company = 'comapany-name' , username = 'username' , password = 'password' )
 
 ```
 
