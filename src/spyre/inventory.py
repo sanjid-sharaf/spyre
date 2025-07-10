@@ -48,7 +48,7 @@ class ItemsClient():
     
     def create_item(self, item : 'InventoryItem') -> 'item':
         """
-        Create a new Inventory Item in SPire.
+        Create a new Inventory Item in Spire.
 
         Sends a POST request to the Inventory/Items endpoint .
 

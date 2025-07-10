@@ -130,12 +130,14 @@ class SpireClient():
         """
         collected = []
         current_start = start
-
+        remaining = limit
         while True:
+
+            current_limit = min(remaining, 1000)
             # Build the query params as a list of tuples to allow repeated keys like 'sort'
             params: List[Tuple[str, Any]] = [
                 ("start", current_start),
-                ("limit", min(limit, 1000))
+                ("limit", current_limit)
             ]
 
             if query:
@@ -166,10 +168,19 @@ class SpireClient():
             for item in items:
                 collected.append(resource_cls.from_json(item, self))
 
-            if not all or (current_start + limit >= count):
+            # Exit if:
+            # - 'all' is False and we reached the requested 'limit'
+            # - no more items are returned
+            if not all:
+                remaining -= len(items)
+                if remaining <= 0 or len(items) == 0:
+                    break
+
+            # Exit if there are no more items available
+            if (current_start + current_limit) >= count or len(items) == 0:
                 break
 
-            current_start += limit
+            current_start += current_limit
 
         return collected
 
