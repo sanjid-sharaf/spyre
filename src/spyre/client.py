@@ -3,6 +3,7 @@ from typing import TypeVar, Optional, Type, Generic, List, Union, Tuple, Dict, A
 from pydantic import BaseModel
 import json
 import urllib.parse
+from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 
 T = TypeVar('T', bound=BaseModel)
 
@@ -23,6 +24,23 @@ class SpireClient():
             "content-type": "application/json"
         })
         self.base_url = f"https://{host}/api/v2/companies/{company}"
+
+        try: 
+            response = self.session.get(self.base_url)
+            if response.text == 'No such company intertes':
+                raise ValueError(f"No company entries for {company}")
+            if response.text == 'Unauthorized':
+                raise ValueError(f"Invalid Authorization")
+
+        except ConnectionError as conn_err:
+            print(f"Connection error occurred for : {conn_err}")
+
+        except Timeout as timeout_err:
+            print(f"Request timed out: {timeout_err}")
+
+        except RequestException as req_err:
+            print(f"General error occurred: {req_err}")
+
 
     def _get(self, endpoint, params=None):
 
