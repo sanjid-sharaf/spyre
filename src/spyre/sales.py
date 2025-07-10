@@ -250,12 +250,9 @@ class salesOrder(APIResource[SalesOrder]):
  
         """
         response = self._client._post(f"/{self.endpoint}/{str(self.id)}/invoice")
-        if response.get('status_code') == 201:
-            location = response.get('headers').get('location')
-            parsed_url = urlparse(location)
-            path_segments = parsed_url.path.rstrip("/").split("/")
-            id = path_segments[-1]
-            return InvoiceClient(client=self._client).get_invoice(id)
+        if response.get('status_code') == 200:
+            data = response.get('content').get('invoice')
+            return salesOrder.from_json(json_data=data, client= self._client)
         else:
             error_message = response.get('content')
             raise CreateRequestError(self.endpoint, status_code=response.get('status_code'), error_message=error_message)
