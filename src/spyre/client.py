@@ -94,11 +94,11 @@ class SpireClient():
             json (dict, optional): JSON data to send in the body of the request.
 
         Returns:
-            dict: A dictionary containing the response status code, URL, content, and headers.
+            dict: The JSON-decoded response from the API.
         """
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         response = self.session.put(url, data=data, json=json)
-        return self._handle_response(response)
+        return response.json()
 
     def _delete(self, endpoint):
         """

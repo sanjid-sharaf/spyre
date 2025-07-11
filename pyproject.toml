@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spyreapi"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Sanjid Sharaf", email="sanjidsharaf1@gmail.com" },
 ]

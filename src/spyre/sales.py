@@ -14,23 +14,33 @@ class OrdersClient():
         self.client = client
         self.endpoint = "sales/orders"
     
-    def get_sales_order(self,  id: int, ) -> "salesOrder":
+    def get_sales_order(self, id: int = None, order_number: str = None) -> "salesOrder":
         """
-        Retrieve a sales order by its ID.
-
-        Sends a GET request to the Spire API to fetch sales order data for the
-        specified ID. Wraps the result in a `salesOrder` instance, which
-        retains a reference to the client for further actions.
+        Retrieve a sales order by its ID or order number.
 
         Args:
-            id (int): The ID of the sales order to retrieve.
+            id (int, optional): The ID of the sales order to retrieve.
+            order_number (str, optional): The order number of the sales order to retrieve.
 
         Returns:
-            salesOrder: A `salesOrder` wrapper instance containing the retrieved
-            data and a reference to the client session.
+            salesOrder: A `salesOrder` wrapper instance containing the retrieved data.
+
+        Raises:
+            ValueError: If neither id nor order_number is provided, or if no matching order is found.
         """
-        response = self.client._get(f"/{self.endpoint}/{str(id)}")
-        return salesOrder.from_json(response, self.client)
+        if id is not None:
+            response = self.client._get(f"/{self.endpoint}/{str(id)}")
+            return salesOrder.from_json(response, self.client)
+        elif order_number is not None:
+            orders = self.query_sales_orders(query=order_number)
+            for order in orders:
+                if getattr(order, "orderNo", None) == order_number:
+                    return order
+            raise ValueError(f"No sales order found with order number: {order_number}")
+        else:
+            raise ValueError("Either 'id' or 'order_number' must be provided.")
+    
+    
 
     def create_sales_order(self, sales_order : 'SalesOrder') -> 'salesOrder':
         """
