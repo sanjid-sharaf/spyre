@@ -69,20 +69,50 @@ class SpireClient():
         return response.json()
 
     def _post(self, endpoint, data=None, json=None):
+        """
+        Send a POST request to the Spire API.
+
+        Args:
+            endpoint (str): The relative API endpoint (e.g., 'sales/orders').
+            data (dict, optional): Data to send in the body of the request.
+            json (dict, optional): JSON data to send in the body of the request.
+
+        Returns:
+            dict: A dictionary containing the response status code, URL, content, and headers.
+        """
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         response = self.session.post(url, data=data, json=json)
         return self._handle_response(response)
 
     def _put(self, endpoint, data=None, json=None):
+        """
+        Send a PUT request to the Spire API.
+
+        Args:
+            endpoint (str): The relative API endpoint (e.g., 'inventory/items/123').
+            data (dict, optional): Data to send in the body of the request.
+            json (dict, optional): JSON data to send in the body of the request.
+
+        Returns:
+            dict: A dictionary containing the response status code, URL, content, and headers.
+        """
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         response = self.session.put(url, data=data, json=json)
-        response.raise_for_status()
-        return response.json()
+        return self._handle_response(response)
 
     def _delete(self, endpoint):
+        """
+        Send a DELETE request to the Spire API.
+
+        Args:
+            endpoint (str): The relative API endpoint to delete (e.g., 'inventory/items/123').
+
+        Returns:
+            bool: True if the deletion was successful (status code 200, 202, or 204), False otherwise.
+        """
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         response = self.session.delete(url)
-        return response.status_code == 200 or response.status_code == 204 or response.status_code == 202
+        return response.status_code in (200, 202, 204)
     
     def _handle_response(self, response):
         
