@@ -2,7 +2,6 @@ import requests
 from typing import TypeVar, Optional, Type, Generic, List, Union, Tuple, Dict, Any
 from pydantic import BaseModel
 import json
-import urllib.parse
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 
 T = TypeVar('T', bound=BaseModel)
@@ -79,9 +78,14 @@ class SpireClient():
 
         Returns:
             dict: A dictionary containing the response status code, URL, content, and headers.
+       
+        Raises:
+            requests.exceptions.HTTPError: If the response contains an HTTP error status.
         """
+        
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         response = self.session.post(url, data=data, json=json)
+        response.raise_for_status()
         return self._handle_response(response)
 
     def _put(self, endpoint, data=None, json=None):
@@ -95,9 +99,13 @@ class SpireClient():
 
         Returns:
             dict: The JSON-decoded response from the API.
+        
+        Raises:
+            requests.exceptions.HTTPError: If the response contains an HTTP error status.
         """
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         response = self.session.put(url, data=data, json=json)
+        response.raise_for_status()
         return response.json()
 
     def _delete(self, endpoint):

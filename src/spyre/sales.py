@@ -36,12 +36,10 @@ class OrdersClient():
             for order in orders:
                 if getattr(order, "orderNo", None) == order_number:
                     return order
-            raise ValueError(f"No sales order found with order number: {order_number}")
+            return None
         else:
             raise ValueError("Either 'id' or 'order_number' must be provided.")
     
-    
-
     def create_sales_order(self, sales_order : 'SalesOrder') -> 'salesOrder':
         """
         Create a new sales order.
