@@ -23,7 +23,7 @@ https://sanjid-sharaf.github.io/spyre/
 ## 📦 Installation
 
 ```bash
-pip install -r requirements.txt
+pip install spyreapi
 ```
 
 ---
