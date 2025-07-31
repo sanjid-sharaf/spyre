@@ -98,13 +98,13 @@ class CustomerClient():
         Query customer with optional full-text search, filtering, multi-field sorting, and pagination.
 
         Args:
-            q (str, optional): Full-text search string.
+            query (str, optional): Full-text search string.
             sort (dict, optional): Dictionary of sorting rules (e.g., {"orderDate": "desc", "orderNo": "asc"}).
             filter (dict, optional): Dictionary of filters to apply (will be JSON-encoded and URL-safe).
             all (bool, optional): If True, retrieves all pages of results.
             limit (int, optional): Number of results per page (max 1000).
             start (int, optional): Starting offset for pagination.
-            **extra_params: Any additional parameters to include in the query.
+            **extra_params (Any): Any additional parameters to include in the query.
 
         Returns:
             List[customer]: List of wrapped customer resources.
@@ -127,7 +127,7 @@ class customer(APIResource[Customer]):
     Model = Customer
 
 
-    def delete(self):
+    def delete(self) -> bool:
         """
         Deletes the Customer from Spire.
 

@@ -116,13 +116,13 @@ class OrdersClient():
         Query sales orders with optional full-text search, filtering, multi-field sorting, and pagination.
 
         Args:
-            q (str, optional): Full-text search string.
+            query (str, optional): Full-text search string.
             sort (dict, optional): Dictionary of sorting rules (e.g., {"orderDate": "desc", "orderNo": "asc"}).
             filter (dict, optional): Dictionary of filters to apply (will be JSON-encoded and URL-safe).
             all (bool, optional): If True, retrieves all pages of results.
             limit (int, optional): Number of results per page (max 1000).
             start (int, optional): Starting offset for pagination.
-            **extra_params: Any additional parameters to include in the query.
+            **extra_params (Any): Any additional parameters to include in the query.
 
         Returns:
             List[salesOrder]: List of wrapped sales order resources.
@@ -145,7 +145,8 @@ class OrdersClient():
 
         Args:
             id (int): The id of the salesOrder to create a note on.
-            note (str): The body of the note 
+            note_body (str): The body of the note. 
+            note_subject (str): The subject of the note.
         Returns:
             note: The created note
 
@@ -217,13 +218,13 @@ class InvoiceClient():
         Query invoices with optional full-text search, filtering, multi-field sorting, and pagination.
 
         Args:
-            q (str, optional): Full-text search string.
+            query (str, optional): Full-text search string.
             sort (dict, optional): Dictionary of sorting rules (e.g., {"orderDate": "desc", "orderNo": "asc"}).
             filter (dict, optional): Dictionary of filters to apply (will be JSON-encoded and URL-safe).
             all (bool, optional): If True, retrieves all pages of results.
             limit (int, optional): Number of results per page (max 1000).
             start (int, optional): Starting offset for pagination.
-            **extra_params: Any additional parameters to include in the query.
+            **extra_params (Any): Any additional parameters to include in the query.
 
         Returns:
             List[invoice]: List of wrapped invoice resources.
@@ -245,7 +246,7 @@ class salesOrder(APIResource[SalesOrder]):
     endpoint = "sales/orders/"
     Model = SalesOrder 
 
-    def invoice(self):
+    def invoice(self) -> invoice:
         """
         Invoice the current sales order.
 
@@ -253,8 +254,10 @@ class salesOrder(APIResource[SalesOrder]):
         Note that quotes (salesOrder with type "Q") cannot be invoiced.
 
         Returns:
-            invoice: The created invoice object if successful.
-            dict: The full response if invoicing failed.
+            invoice (invoice): The created invoice object if successful.
+
+        Raises:
+            CreateRequestError: If invoice creation failed.
  
         """
         response = self._client._post(f"/{self.endpoint}/{str(self.id)}/invoice")
@@ -280,7 +283,7 @@ class salesOrder(APIResource[SalesOrder]):
         )
         return salesOrder.from_json(response, self._client)
     
-    def delete(self):
+    def delete(self) -> bool:
         """
         Cancels or deletes the sales order.
 
@@ -337,7 +340,7 @@ class invoice(APIResource[Invoice]):
     endpoint = "sales/invoices/"
     Model = Invoice
 
-    def reverse(self):
+    def reverse(self) -> salesOrder:
         """
         Convert this invoice into a sales order.
 
@@ -359,7 +362,7 @@ class invoice(APIResource[Invoice]):
         If no order object is provided, updates the current instance on the server.
 
         Args:
-            invoice (Invoice): The Invoice model instance containing updated data.
+            invoice_ (Invoice): The Invoice model instance containing updated data.
 
         Returns:
             invoice: The updated invoice instance created from the response data.

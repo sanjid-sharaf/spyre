@@ -7,14 +7,17 @@ from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestExce
 T = TypeVar('T', bound=BaseModel)
 
 class SpireClient():    
-    """A lightweight client to interact with the Spire API using requests sessions for connection reuse and authenticated calls."""
+    """A lightweight to interact with the Spire API using requests sessions for connection reuse and authenticated calls."""
+    
     def __init__(self, host, company, username, password,):
         """
-        :param host (str): Spire Server host
-        :param company (str): Spire company
-        :param username (str): Spire user username.
-        :param password (str): Spire user password.
-        
+        Initialize a SpireClient instance.
+
+        Args:
+            host (str): Spire Server host.
+            company (str): Spire company.
+            username (str): Spire user username.
+            password (str): Spire user password.
         """
         self.session = requests.Session()
         self.session.auth = (username, password)
@@ -239,7 +242,7 @@ class APIResource(Generic[T]):
             setattr(self, k, v)
 
     def __getattr__(self, item):
-        """  delegate unknown attributes to the Pydantic model. 
+        """  Delegate unknown attributes to the Pydantic model. 
         if you try to access an attribute on your wrapper class that doesn't exist in that class.
         It will automatically forward the request to self._model """
         

@@ -12,7 +12,7 @@ __all__ = [
     "Spire",
     "ItemsClient",
     "InventoryClient",
-    "SalesOrderClient",
+    "OrdersClient",
     "SalesOrder",
     "SalesOrderItem",
     "InventoryItem",

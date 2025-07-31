@@ -40,7 +40,7 @@ class ItemsClient():
             id (int): The ID of the sales order to retrieve.
 
         Returns:
-            salesOrder: A `item` wrapper instance containing the retrieved
+            item: A `item` wrapper instance containing the retrieved
             data and a reference to the client session.
         """
         response = self.client._get(f"/{self.endpoint}/{str(id)}")
@@ -74,7 +74,7 @@ class ItemsClient():
             raise CreateRequestError(self.endpoint, status_code=response.get('status_code'), error_message=error_message)
 
     
-    def update_item(self, id: int, inventory_item : 'InventoryItem') -> 'item':
+    def update_item(self, id: int, inventory_item : 'InventoryItem') -> "item":
         """
         Update an existing Inventory Item by ID.
 
@@ -84,7 +84,7 @@ class ItemsClient():
 
         Args:
             id (int): The ID of the item to update.
-            item (InventoryItem): A InventoryItem instance with the sales order details.
+            inventory_item (InventoryItem): A InventoryItem instance with the sales order details.
 
         Returns:
             item: An instance of the item wrapper class initialized with 
@@ -104,7 +104,7 @@ class ItemsClient():
             id (int): The ID of the inventory item to delete.
 
         Returns:
-            bool: True if the item was successfully deleted, False otherwise.
+            bool (bool): True if the item was successfully deleted, False otherwise.
         """
         return self.client._delete(f"/{self.endpoint}/{str(id)}")
     
@@ -124,13 +124,13 @@ class ItemsClient():
         Query inventory items with optional full-text search, filtering, multi-field sorting, and pagination.
 
         Args:
-            q (str, optional): Full-text search string.
+            query (str, optional): Full-text search string.
             sort (dict, optional): Dictionary of sorting rules (e.g., {"orderDate": "desc", "orderNo": "asc"}).
             filter (dict, optional): Dictionary of filters to apply (will be JSON-encoded and URL-safe).
             all (bool, optional): If True, retrieves all pages of results.
             limit (int, optional): Number of results per page (max 1000).
             start (int, optional): Starting offset for pagination.
-            **extra_params: Any additional parameters to include in the query.
+            **extra_params (Any): Any additional parameters to include in the query.
 
         Returns:
             List[item]: List of wrapped sales order resources.
@@ -280,12 +280,7 @@ class item(APIResource[InventoryItem]):
     endpoint =  'inventory/items'
     Model = InventoryItem
 
-    """
-    #TODO Check Upload, Add Uom & UPC, Add Price Matrix Record, Setting Sell & Buy UOM
-
-    """
-
-    def delete(self):
+    def delete(self) -> bool:
         """
         Cancels or deletes the item.
 
@@ -375,7 +370,7 @@ class uom(APIResource[UnitOfMeasure]):
         self._endpoint = f'inventory/items/{item_id}/uoms/{str(uom_id)}'
         self._item_id = item_id
 
-    def delete(self):
+    def delete(self) -> bool:
         """
         Cancels or deletes the uom.
 
@@ -395,7 +390,7 @@ class uom(APIResource[UnitOfMeasure]):
         If an uom object is provided, updates the item using the given data.
 
         Args:
-            uom (uom, optional): An optional uom instance to use for the update.
+            _uom (uom, optional): An optional uom instance to use for the update.
 
         Returns:
             uom: The updated uom object reflecting the new status.

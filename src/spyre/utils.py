@@ -75,21 +75,24 @@ def create_duplicate_record(
     return instance.__class__(**cleaned_data)
 
 def create_sales_order_from_invoice(invoice: Invoice) -> SalesOrder:
-    """Creates a Sales Order from an Invoice
-    
-    
-    Changes when converting
-    freight negative
-    backorders
-    extendedpriceorderd
-    orderqty
-    shippingCarrier
-    subtotalordered
-    taxes : {total}
-    total
-    totalOrdered
-    trackingNo
+    """
+    Creates a Sales Order from an Invoice by copying relevant fields 
+    and adjusting quantities and freight charges for order processing.
 
+    Args:
+        invoice (Invoice): The invoice object to convert.
+
+    Returns:
+        SalesOrder: A new Sales Order instance populated with data from the invoice,
+            including negative freight and order quantities, and duplicated
+            address and item records.
+
+    Notes:
+        - Freight amount is negated.
+        - Order and committed quantities are negated unless zero.
+        - Shipping carrier and tracking number fields are reset to None.
+        - Duplicate records are created for address, shipping address, and items 
+          to avoid mutating the original invoice data.
     """
 
 
