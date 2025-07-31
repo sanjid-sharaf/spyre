@@ -4,6 +4,10 @@ A robust and extensible Python client for interacting with the [Spire Business S
 
 ---
 
+## Documentation
+
+https://sanjid-sharaf.github.io/spyre/
+
 ## ✨ Features
 
 - ✅ Object-oriented resource wrappers for each module (e.g., `salesOrder`, `invoice`, `item`)
