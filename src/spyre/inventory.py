@@ -28,23 +28,40 @@ class ItemsClient():
         self.client = client
         self.endpoint = 'inventory/items'
 
-    def get_item(self, id) -> "item":
+    def get_item(self, id: int = None, part_no: str = None, warehouse: str = None) -> "item":
         """
-        Retrieve a inventory item by its ID.
+        Retrieve an inventory item by ID or (part_no + warehouse).
 
-        Sends a GET request to the Spire API to fetch a inentory item data for the
-        specified ID. Wraps the result in a `item` instance, which
-        retains a reference to the client for further actions.
+        Sends a GET request to the Spire API to fetch inventory item data for the
+        specified ID, or uses a filtered query with part number and warehouse.
+        Wraps the result in an `item` instance, which retains a reference to the
+        client for further actions.
 
         Args:
-            id (int): The ID of the sales order to retrieve.
+            id (int, optional): The ID of the inventory item to retrieve.
+            part_no (str, optional): The part number of the item to retrieve.
+            warehouse (str, optional): The warehouse code where the item is located.
 
         Returns:
-            item: A `item` wrapper instance containing the retrieved
-            data and a reference to the client session.
+            item: An `item` wrapper instance containing the retrieved data.
+
+        Raises:
+            ValueError: If neither ID nor (part_no and warehouse) are provided,
+                        or if no matching item is found.
         """
-        response = self.client._get(f"/{self.endpoint}/{str(id)}")
-        return item.from_json(response, self.client)
+        if id is not None:
+            response = self.client._get(f"/{self.endpoint}/{str(id)}")
+            return item.from_json(response, self.client)
+
+        elif part_no and warehouse:
+            items = self.query_inventory_items(filter={"partNo": part_no, "whse": warehouse})
+            for itm in items:
+                if getattr(itm, "partNo", None) == part_no and getattr(itm, "whse", None) == warehouse:
+                    return itm
+            raise ValueError(f"No item found with part_no='{part_no}' and warehouse='{warehouse}'.")
+
+        else:
+            raise ValueError("You must provide either 'id' or both 'part_no' and 'warehouse'.")
     
     def create_item(self, item : 'InventoryItem') -> 'item':
         """
@@ -166,7 +183,6 @@ class ItemsClient():
         items = response.get('records')
         for item in items:
             uoms.append(uom.from_json(json_data=item, client = self.client, item_id = id))
-
         return uoms
 
     def get_uom(self, item_id :int , uom_id : int) -> "uom":
@@ -186,10 +202,10 @@ class ItemsClient():
 
         """
         response = self.client._get(f"/{self.endpoint}/{str(item_id)}/uoms/{str(uom_id)}")
-        return uom.from_json(response, self.client)
+        return uom.from_json(response, self.client , item_id = item_id)
     
 
-    def create_item_uom(self, id: int, uom : UnitOfMeasure) -> List["uom"]:
+    def create_item_uom(self, id: int, uom : UnitOfMeasure) -> "uom":
         """
         Create a new Unit of Measure (UOM) for a specific inventory item.
 
@@ -212,8 +228,8 @@ class ItemsClient():
             location = response.get('headers').get('location')
             parsed_url = urlparse(location)
             path_segments = parsed_url.path.rstrip("/").split("/")
-            id = path_segments[-1]
-            return self.get_uom(id)
+            new_uom_id = path_segments[-1]
+            return self.get_uom(item_id=id, uom_id=new_uom_id)
         else:
             error_message = response.get('content')
             raise CreateRequestError(self.endpoint, status_code=response.get('status_code'), error_message=error_message)
@@ -234,7 +250,7 @@ class ItemsClient():
         """
         return self.client._delete(f"/{self.endpoint}/{str(item_id)}/uoms/{str(uom_id)}")
     
-    def update_item_uom(self, item_id: int, uom_id : int, uom :'uom') -> 'uom':
+    def update_item_uom(self, item_id: int, uom_id : int, uom_record :'uom') -> 'uom':
         """
         Update an existing Unit of Measure (UOM) for a given inventory item.
 
@@ -249,8 +265,8 @@ class ItemsClient():
         Returns:
             uom: The updated `uom` instance returned from the API.
         """
-        response = self.client._put(f"/{self.endpoint}/{str(item_id)}/{str(uom_id)}", json=uom.model_dump(exclude_none=True, exclude_unset=True))
-        return uom.from_json(response, self.client)
+        response = self.client._put(f"/{self.endpoint}/{str(item_id)}/uoms/{str(uom_id)}", json=uom_record.model_dump(exclude_none=True, exclude_unset=True))
+        return uom.from_json(response, self.client, item_id = item_id)
     
 
     def get_item_upcs(self, id : int) -> List["upc"]:
@@ -273,6 +289,88 @@ class ItemsClient():
             upcs.append(upc.from_json(json_data=item, client = self.client, item_id = id))
 
         return upcs
+    
+    def get_upc(self, item_id :int , upc_id : int) -> "upc":
+        """
+        Retrieve a specific UPC (upc) for a given inventory item.
+
+        This method sends a GET request to the Spire API to fetch a single upc record
+        associated with a specific inventory item and upc ID. The response is wrapped
+        into a `upc` object that maintains a reference to the API client.
+
+        Args:
+            item_id (int): The unique ID of the inventory item.
+            upc_id (int): The unique ID of the upc to retrieve.
+
+        Returns:
+            upc: A `upc` object representing the retrieved unit of measure.
+
+        """
+        response = self.client._get(f"/{self.endpoint}/{str(item_id)}/upcs/{str(upc_id)}")
+        return upc.from_json(response, self.client , item_id = item_id)
+    
+    def create_item_upc(self, id: int, upc : UPC) -> "upc":
+        """
+        Create a new UPC (upc) for a specific inventory item.
+
+        Sends a POST request to the Spire API to create a new upc for the inventory item
+        with the specified ID. If successful, the method retrieves and returns the newly
+        created upc object. If the creation fails, an exception is raised.
+
+        Args:
+            id (int): The ID of the inventory item for which to create the upc.
+            upc (UPC): A Pydantic model instance representing the upc to create.
+
+        Returns:
+            List[upc]: A list containing the created `upc` object.
+
+        Raises:
+            CreateRequestError: If the API response status is not 201 (Created).
+        """
+        response =  self.client._post(f"/{self.endpoint}/{str(id)}/upcs", json=upc.model_dump(exclude_unset=True, exclude_none=True))
+        if response.get('status_code') == 201:
+            location = response.get('headers').get('location')
+            parsed_url = urlparse(location)
+            path_segments = parsed_url.path.rstrip("/").split("/")
+            new_upc_id = path_segments[-1]
+            return self.get_upc(item_id=id, upc_id = new_upc_id)
+        else:
+            error_message = response.get('content')
+            raise CreateRequestError(self.endpoint, status_code=response.get('status_code'), error_message=error_message)
+
+    def delete_upc(self, item_id : int, upc_id :int) -> bool:
+        """
+        Delete a UPC (upc) from a specific inventory item.
+
+        Sends a DELETE request to the Spire API to remove a upc associated with the
+        given item and upc ID.
+
+        Args:
+            item_id (int): The ID of the inventory item.
+            upc_id (int): The ID of the Unit of Measure to delete.
+
+        Returns:
+            bool: True if the deletion was successful, otherwise raises an error.
+        """
+        return self.client._delete(f"/{self.endpoint}/{str(item_id)}/upcs/{str(upc_id)}")
+    
+    def update_item_upc(self, item_id: int, upc_id : int, upc_record :'upc') -> 'upc':
+        """
+        Update an existing UPC (upc) for a given inventory item.
+
+        Sends a PUT request to the Spire API to update the upc record with the specified
+        item and upc ID using the provided `upc` data.
+
+        Args:
+            item_id (int): The ID of the inventory item.
+            upc_id (int): The ID of the upc to update.
+            upc (upc): A `upc` instance with updated field values.
+
+        Returns:
+            upc: The updated `upc` instance returned from the API.
+        """
+        response = self.client._put(f"/{self.endpoint}/{str(item_id)}/upcs/{str(upc_id)}", json=upc_record.model_dump(exclude_none=True, exclude_unset=True))
+        return upc.from_json(response, self.client, item_id = item_id)
     
 
 class item(APIResource[InventoryItem]):
@@ -327,8 +425,25 @@ class item(APIResource[InventoryItem]):
 
         return uoms
     
+    def get_upcs(self) -> List["upc"]:
+        """
+        Retrieve all UPC records for the current inventory item.
 
-    def add_uom(self, uom : UnitOfMeasure) -> List["uom"]:
+        This method sends a GET request to the Spire API and returns all UPCs
+        associated with this item's ID.
+
+        Returns:
+            List[upc]: A list of `upc` instances representing the available units of measure.
+        """     
+        upcs = []
+        response = self._client._get(f"{self.endpoint}/{self.id}/upcs")
+        items = response.get('records')
+        for item in items:
+            upcs.append(upc.from_json(json_data=item, client = self._client, item_id = id))
+
+        return upcs
+
+    def add_uom(self, uom_record : UnitOfMeasure) -> "uom":
         """
         Add a new Unit of Measure (UOM) to the current inventory item.
 
@@ -340,22 +455,49 @@ class item(APIResource[InventoryItem]):
             uom (UnitOfMeasure): The UnitOfMeasure Pydantic model to be created.
 
         Returns:
-            List[uom]: A list containing the newly created `uom` instance.
+            uom (uom): The newly created Unit of measure as a `uom` instance.
 
         Raises:
             CreateRequestError: If the API returns a non-201 status code during creation.
         """
-        response =  self.client._post(f"/{self.endpoint}/{str(self.id)}/uoms", json=uom.model_dump(exclude_unset=True, exclude_none=True))
+        response =  self._client._post(f"/{self.endpoint}/{str(self.id)}/uoms", json=uom_record.model_dump(exclude_unset=True, exclude_none=True))
         if response.get('status_code') == 201:
             location = response.get('headers').get('location')
             parsed_url = urlparse(location)
             path_segments = parsed_url.path.rstrip("/").split("/")
             id = path_segments[-1]
-            return self.get_uom(id)
+            return InventoryClient(self._client).items.get_uom(id)
         else:
             error_message = response.get('content')
             raise CreateRequestError(self.endpoint, status_code=response.get('status_code'), error_message=error_message)
+        
+    def add_upc(self, upc_record : UPC) -> "upc":
+        """
+        Add a new UPC to the current inventory item.
 
+        Sends a POST request to the Spire API to create a new UPC record using the provided
+        UPC model. If the creation is successful (HTTP 201), it retrieves
+        and returns the created UPC.
+
+        Args:
+            uom_record (UPC): The UPC Pydantic model to be created.
+
+        Returns:
+            upc (upc): The newly created UPC as a `upc` instance.
+
+        Raises:
+            CreateRequestError: If the API returns a non-201 status code during creation.
+        """
+        response =  self._client._post(f"/{self.endpoint}/{str(self.id)}/upcs", json=upc_record.model_dump(exclude_unset=True, exclude_none=True))
+        if response.get('status_code') == 201:
+            location = response.get('headers').get('location')
+            parsed_url = urlparse(location)
+            path_segments = parsed_url.path.rstrip("/").split("/")
+            id = path_segments[-1]
+            return InventoryClient(self._client).items.get_upc(id)
+        else:
+            error_message = response.get('content')
+            raise CreateRequestError(self.endpoint, status_code=response.get('status_code'), error_message=error_message)
     
 class uom(APIResource[UnitOfMeasure]):
     Model = UnitOfMeasure
@@ -403,15 +545,127 @@ class UpcClient():
 
     def __init__(self, client : SpireClient):
         self.endpoint = 'inventory/upcs'
+        self.client = client
+
+    def get_upc(self, upc_id : int) -> "upc":
+        """
+        Retrieve a specific UPC (upc) for given id.
+
+        This method sends a GET request to the Spire API to fetch a single upc record
+        associated with the upc ID. The response is wrapped
+        into a `upc` object that maintains a reference to the API client.
+
+        Args:
+            upc_id (int): The unique ID of the upc to retrieve.
+
+        Returns:
+            upc: A `upc` object representing the retrieved unit of measure.
+
+        """
+        response = self.client._get(f"/{self.endpoint}/{str(upc_id)}")
+        return upc.from_json(response, self.client)
+    
+    def create_item_upc(self, upc : UPC) -> "upc":
+        """
+        Create a new UPC (upc) for a given id.
+
+        Sends a POST request to the Spire API to create a new upc.
+        If successful, the method retrieves and returns the newly
+        created upc object. If the creation fails, an exception is raised.
+        For a successful creation, either the whse and the partNo or the inventory
+        field has to be filled in
+
+        Args:
+            upc (UPC): A Pydantic model instance representing the upc to create.
+
+        Returns:
+            upc (upc): A list containing the created `upc` object.
+
+        Raises:
+            CreateRequestError: If the API response status is not 201 (Created).
+        """
+        response =  self.client._post(f"/{self.endpoint}/{str(id)}", json=upc.model_dump(exclude_unset=True, exclude_none=True))
+        if response.get('status_code') == 201:
+            location = response.get('headers').get('location')
+            parsed_url = urlparse(location)
+            path_segments = parsed_url.path.rstrip("/").split("/")
+            new_upc_id = path_segments[-1]
+            return self.get_upc(upc_id = new_upc_id)
+        else:
+            error_message = response.get('content')
+            raise CreateRequestError(self.endpoint, status_code=response.get('status_code'), error_message=error_message)
+
+    def delete_upc(self, upc_id :int) -> bool:
+        """
+        Delete a UPC.
+
+        Sends a DELETE request to the Spire API to remove a upc associated with the
+        given upc ID.
+
+        Args:
+            upc_id (int): The ID of the Unit of Measure to delete.
+
+        Returns:
+            bool: True if the deletion was successful, otherwise raises an error.
+        """
+        return self.client._delete(f"/{self.endpoint}/{str(upc_id)}")
+    
+    def update_item_upc(self, upc_id : int, upc_record :'upc') -> 'upc':
+        """
+        Update an existing UPC.
+
+        Sends a PUT request to the Spire API to update the upc record with the specified
+        upc ID using the provided `upc` data.
+
+        Args:
+            upc_id (int): The ID of the upc to update.
+            upc (upc): A `upc` instance with updated field values.
+
+        Returns:
+            upc: The updated `upc` instance returned from the API.
+        """
+        response = self.client._put(f"/{self.endpoint}/{str(upc_id)}", json=upc_record.model_dump(exclude_none=True, exclude_unset=True))
+        return upc.from_json(response, self.client)
 
 class upc(APIResource[UPC]):
     _endpoint = ''         
-    Model = ''
+    Model = UPC
 
     def __init__(self, model, client, item_id=None):
-        if item_id is None:
-            raise ValueError("item_id must be provided")
+
         super().__init__(model, client)
         upc_id = model.id
-        self._endpoint = f'inventory/items/{item_id}/upcs/{str(upc_id)}'
+        if item_id is None:
+            self._endpoint = f'inventory/upcs/{str(upc_id)}'
+        else:
+            self._endpoint = f'inventory/items/{item_id}/upcs/{str(upc_id)}'
         self._item_id = item_id
+
+    def delete(self) -> bool:
+        """
+        Cancels or deletes the upc.
+
+        Sends a DELETE request to the API to remove the upc with the current ID.
+
+        Returns:
+            bool: True if the upc was successfully deleted (HTTP 204 or 200), False otherwise.
+        """
+        
+        return self._client._delete(f"/{self._endpoint}")
+    
+    def update(self, _upc: "upc" = None) -> 'upc':
+        """
+        Update the upc.
+
+        If no upc object is provided, updates the current instance on the server.
+        If an upc object is provided, updates the item using the given data.
+
+        Args:
+            _upc (upc, optional): An optional upc instance to use for the update.
+
+        Returns:
+            upc: The updated upc object reflecting the new status.
+        """
+        data = _upc.model_dump(exclude_unset=True, exclude_none=True) if _upc else self.model_dump(exclude_unset=True, exclude_none=True)
+        response = self._client._put(f"/{self._endpoint}", json=data)
+        return upc.from_json(response, self._client, item_id = self._item_id)    

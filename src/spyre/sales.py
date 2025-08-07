@@ -36,7 +36,7 @@ class OrdersClient():
             for order in orders:
                 if getattr(order, "orderNo", None) == order_number:
                     return order
-            return None
+            raise ValueError(f"No order found for order number {order_number}")
         else:
             raise ValueError("Either 'id' or 'order_number' must be provided.")
     
@@ -246,7 +246,7 @@ class salesOrder(APIResource[SalesOrder]):
     endpoint = "sales/orders/"
     Model = SalesOrder 
 
-    def invoice(self) -> invoice:
+    def invoice(self) -> "invoice":
         """
         Invoice the current sales order.
 
