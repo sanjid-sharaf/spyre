@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional, Union
 from pydantic import BaseModel
-
+from .shared_models import Vendor
 
 
 class UPC(BaseModel):
@@ -15,12 +15,6 @@ class UPC(BaseModel):
     modified: Optional[str] = None
     modifiedBy: Optional[str] = None
     links: Optional[Dict[str, str]] = None
-
-class Vendor(BaseModel):
-    id: Optional[int] = None
-    vendorNo: Optional[str] = None
-    name: Optional[str] = None
-
 
 class UnitOfMeasure(BaseModel):
     id: Optional[int] = None

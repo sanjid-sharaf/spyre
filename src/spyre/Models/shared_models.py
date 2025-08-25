@@ -123,3 +123,10 @@ class Note(BaseModel):
     modified: Optional[str] = None
     modifiedBy: Optional[str] = None
     links: Optional[Dict[str, str]] = None
+
+class Vendor(BaseModel):
+    id: Optional[int] = None
+    vendorNo: Optional[str] = None
+    code: Optional[str] = None
+    name: Optional[str] = None
+    

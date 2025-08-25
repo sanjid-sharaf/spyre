@@ -2,6 +2,7 @@ from .client import SpireClient
 from .sales import OrdersClient, InvoiceClient
 from .customers import CustomerClient
 from .inventory import InventoryClient
+from .purchasing import PurchasingClient, PurchasingHistoryClient
 
 class Spire:
     """
@@ -32,5 +33,7 @@ class Spire:
         self.invoices = InvoiceClient(self.client)
         self.customers = CustomerClient(self.client)
         self.inventory = InventoryClient(self.client)
+        self.purchasing = PurchasingClient(self.client)
+        self.purchasingHistory = PurchasingHistoryClient(self.client)
 
 
