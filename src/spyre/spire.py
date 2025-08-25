@@ -17,6 +17,8 @@ class Spire:
         invoices (InvoiceClient): Client for accessing invoices.
         customers (CustomerClient): Client for accessing customer records.
         inventory (InventoryClient): Client for accessing inventory items.
+        purchasing (PurchasingClient): Client for accessing purchasing records.
+        purchasingHistory (PurchasingHistoryClient): Client for accessing purchasing history records.
     """
     def __init__(self, host : str, company : str, username : str, password : str):
         """

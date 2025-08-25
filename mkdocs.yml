@@ -25,3 +25,4 @@ nav:
       - Sales: api/sales.md
       - Communications: api/crm.md
       - Customers: api/customers.md
+      - Purchasing: api/purchasing.md

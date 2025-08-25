@@ -260,7 +260,7 @@ class ItemsClient():
         Args:
             item_id (int): The ID of the inventory item.
             uom_id (int): The ID of the UOM to update.
-            uom (uom): A `uom` instance with updated field values.
+            uom_record (uom): A `uom` instance with updated field values.
 
         Returns:
             uom: The updated `uom` instance returned from the API.
@@ -364,7 +364,7 @@ class ItemsClient():
         Args:
             item_id (int): The ID of the inventory item.
             upc_id (int): The ID of the upc to update.
-            upc (upc): A `upc` instance with updated field values.
+            upc_record (upc): A `upc` instance with updated field values.
 
         Returns:
             upc: The updated `upc` instance returned from the API.
@@ -452,7 +452,7 @@ class item(APIResource[InventoryItem]):
         and returns the created UOM.
 
         Args:
-            uom (UnitOfMeasure): The UnitOfMeasure Pydantic model to be created.
+            uom_record (UnitOfMeasure): The UnitOfMeasure Pydantic model to be created.
 
         Returns:
             uom (uom): The newly created Unit of measure as a `uom` instance.
@@ -480,7 +480,7 @@ class item(APIResource[InventoryItem]):
         and returns the created UPC.
 
         Args:
-            uom_record (UPC): The UPC Pydantic model to be created.
+            upc_record (UPC): The UPC Pydantic model to be created.
 
         Returns:
             upc (upc): The newly created UPC as a `upc` instance.
@@ -619,7 +619,7 @@ class UpcClient():
 
         Args:
             upc_id (int): The ID of the upc to update.
-            upc (upc): A `upc` instance with updated field values.
+            upc_record (upc): A `upc` instance with updated field values.
 
         Returns:
             upc: The updated `upc` instance returned from the API.

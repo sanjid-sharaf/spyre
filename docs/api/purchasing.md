@@ -1,0 +1,3 @@
+# Purchasing
+
+::: spyre.purchasing
