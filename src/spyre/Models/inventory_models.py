@@ -1,5 +1,5 @@
 from typing import List, Dict, Optional, Union
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from .shared_models import Vendor
 
 
@@ -30,21 +30,12 @@ class UnitOfMeasure(BaseModel):
 
 
 class Pricing(BaseModel):
-    id: Optional[int] = None
-
-    # full item endpoint
-    sellPrices: Optional[List[str]] = None
-
-    # query endpoint
-    sellPrice: Optional[List[str]] = None
-
-    currMargin: Optional[str] = None
-    currMarginPct: Optional[str] = None
-    avgMargin: Optional[str] = None
-    avgMarginPct: Optional[str] = None
-
-    def prices(self) -> List[str] | None:
-        return self.sellPrices or self.sellPrice
+    id: int | None = None
+    sellPrices: list[str] | None = None
+    currMargin: str | None = None
+    currMarginPct: str | None = None
+    avgMargin: str | None = None
+    avgMarginPct: str | None = None
 
 
 class ItemUDF(BaseModel):
@@ -166,6 +157,32 @@ class InventoryItem(BaseModel):
     modified: Optional[str] = None
     links: Optional[Dict[str, Union[str, int, float, bool]]] = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_pricing(cls, data):
+
+
+        pricing = data.get("pricing")
+
+        if not pricing:
+            return data
+
+        # Query endpoint format
+        if "sellPrice" in pricing:
+            uom = data.get("sellMeasureCode", "DEFAULT")
+
+            data["pricing"] = {
+                uom: {
+                    "sellPrices": pricing.get("sellPrice"),
+                    "currMargin": pricing.get("currMargin"),
+                    "currMarginPct": pricing.get("currMarginPct"),
+                    "avgMargin": pricing.get("avgMargin"),
+                    "avgMarginPct": pricing.get("avgMarginPct"),
+                }
+            }
+
+        return data
+    
 
     def get_sell_price(self, uom: str = None, level: int = 0):
         """
@@ -185,22 +202,14 @@ class InventoryItem(BaseModel):
         if not self.pricing:
             return None
 
-        if isinstance(self.pricing, Pricing):
-            prices = self.pricing.prices()
-        else:
-            uom = uom or self.sellMeasureCode
+        uom = uom or self.sellMeasureCode
 
-            pricing = self.pricing.get(uom)
+        pricing = self.pricing.get(uom)
 
-            if not pricing:
-                return None
-
-            prices = pricing.prices()
-
-        if not prices:
+        if not pricing or not pricing.sellPrices:
             return None
 
-        if level >= len(prices):
+        if level < 0 or level >= len(pricing.sellPrices):
             return None
 
-        return prices[level]
+        return pricing.sellPrices[level]
