@@ -31,7 +31,7 @@ class UnitOfMeasure(BaseModel):
 
 class Pricing(BaseModel):
     id: Optional[int] = None
-    sellPrice: Optional[List[str]] = None
+    sellPrices: Optional[List[str]] = None
     currMargin: Optional[str] = None
     currMarginPct: Optional[str] = None
     avgMargin: Optional[str] = None
