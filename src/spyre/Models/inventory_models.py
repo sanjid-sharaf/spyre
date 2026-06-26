@@ -31,11 +31,20 @@ class UnitOfMeasure(BaseModel):
 
 class Pricing(BaseModel):
     id: Optional[int] = None
+
+    # full item endpoint
     sellPrices: Optional[List[str]] = None
+
+    # query endpoint
+    sellPrice: Optional[List[str]] = None
+
     currMargin: Optional[str] = None
     currMarginPct: Optional[str] = None
     avgMargin: Optional[str] = None
     avgMarginPct: Optional[str] = None
+
+    def prices(self) -> List[str] | None:
+        return self.sellPrices or self.sellPrice
 
 
 class ItemUDF(BaseModel):
@@ -141,7 +150,7 @@ class InventoryItem(BaseModel):
     manufactureCountry: Optional[str] = None
     harmonizedCode: Optional[str] = None
     extendedDescription: Optional[str] = None
-    pricing: Optional[Union[ Pricing | Dict[str, Pricing]]] = None
+    pricing: Optional[Pricing | Dict[str, Pricing] | None ] = None
     salesTaxFlags: Optional[Dict[str, Union[str, int, float, bool]]] = None
     images: Optional[List[str]] = None
     defaultExpiryDate: Optional[str] = None
@@ -156,3 +165,42 @@ class InventoryItem(BaseModel):
     created: Optional[str] = None
     modified: Optional[str] = None
     links: Optional[Dict[str, Union[str, int, float, bool]]] = None
+
+
+    def get_sell_price(self, uom: str = None, level: int = 0):
+        """
+        Return the sell price for the specified UOM and price level.
+
+        Supports both item-detail and query pricing formats returned by the
+        Spire API.
+
+        Args:
+            uom: Unit of measure code. Defaults to ``sellMeasureCode`` when
+                using UOM-based pricing.
+            level: Zero-based price level index (default: 0).
+
+        Returns:
+            The sell price as a string, or ``None`` if unavailable.
+        """
+        if not self.pricing:
+            return None
+
+        if isinstance(self.pricing, Pricing):
+            prices = self.pricing.prices()
+        else:
+            uom = uom or self.sellMeasureCode
+
+            pricing = self.pricing.get(uom)
+
+            if not pricing:
+                return None
+
+            prices = pricing.prices()
+
+        if not prices:
+            return None
+
+        if level >= len(prices):
+            return None
+
+        return prices[level]
